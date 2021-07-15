@@ -1,6 +1,6 @@
 from numpy import all, asarray, array, where, exp
 from pandas import DataFrame
-from skimage.filters import gaussian_filter
+from skimage.filters import gaussian
 from skimage.feature import peak_local_max
 from scipy.optimize import curve_fit
 from scipy.stats import multivariate_normal
@@ -27,7 +27,7 @@ def volume(im, center, window):
         return volume
 
 def findBeads(im, window, thresh):
-    smoothed = gaussian_filter(im, 1, output=None, mode='nearest', cval=0, multichannel=None)
+    smoothed = gaussian(im, 1, output=None, mode='nearest', cval=0, multichannel=None)
     centers = peak_local_max(smoothed, min_distance=3, threshold_rel=thresh, exclude_border=True)
     return centers, smoothed.max(axis=0)
 
@@ -56,15 +56,23 @@ def getPSF(bead, options):
     return data, latFit, axFit
 
 def getSlices(average):
-    latProfile = (average.mean(axis=0).mean(axis=1) + average.mean(axis=0).mean(axis=1))/2
-    axProfile = (average.mean(axis=1).mean(axis=1) + average.mean(axis=2).mean(axis=1))/2
+    # Original code uses mean through axes
+    #latProfile = (average.mean(axis=0).mean(axis=1) + average.mean(axis=0).mean(axis=1))/2
+    #axProfile = (average.mean(axis=1).mean(axis=1) + average.mean(axis=2).mean(axis=1))/2
+    
+    # Get center slices
+    windowshape = average.shape
+    mid_z = windowshape[0]//2
+    mid_x = windowshape[1]//2
+    mid_y = windowshape[2]//2
+    latProfile = (average[mid_z-1,mid_x-1,:]+average[mid_z,mid_x-1,:]+average[mid_z-1,mid_x,:]+average[mid_z,mid_x,:])/4
+    axProfile  = (average[:,mid_x-1,mid_y-1]+average[:,mid_x,mid_y-1]+average[:,mid_x-1,mid_y]+average[:,mid_x,mid_y])/4
     return latProfile, axProfile
 
 def fit(yRaw,scale):
     y = yRaw - (yRaw[0]+yRaw[-1])/2
     x = (array(range(y.shape[0])) - y.shape[0]/2)
-    x = (array(range(y.shape[0])) - y.shape[0]/2)
-    popt, pcov = curve_fit(gauss, x, y, p0 = [1, 0, 1, 0])
+    popt, pcov = curve_fit(gauss, x, y, p0 = [1, 0, 1,0])
     FWHM = 2.355*popt[2]/scale
     yFit = gauss(x, *popt)
     return x, y, yFit, FWHM
@@ -105,5 +113,5 @@ def nearest(x,centers):
     z = [dist(x,y) for y in centers if not (x == y).all()]
     return abs(array(z)).min(axis=0)
 
-def gauss(x, a, mu, sigma, b):
+def gauss(x, a, mu, sigma,b):
     return a*exp(-(x-mu)**2/(2*sigma**2))+b
