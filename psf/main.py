@@ -79,15 +79,16 @@ def fit(yRaw,scale):
     yFit = gauss(x, *popt)
     return x, y, yFit, FWHM
 
-def plotPSF(x,y,yFit,FWHM,scale,Max):
+def plotPSF(x,y,yFit,FWHM,scale,Max,annotate = False):
     plt.plot(x.astype(float)/scale,yFit/yFit.max(), lw=2);
     plt.plot(x.astype(float)/scale,y/yFit.max(),'ok');
     plt.xlim([-x.shape[0]/2/scale, x.shape[0]/2/scale])
     plt.ylim([0, 1.1])
     plt.xlabel('Distance (um)')
     plt.ylabel('Norm. intensity')
-    plt.annotate('FWHM %.2f um' % FWHM,xy=(x.shape[0]/4/scale, .6), size=14)
-    plt.annotate('Brightness %.2f' % Max,xy=(x.shape[0]/4/scale, .5), size=14)
+    if annotate:
+        plt.annotate('FWHM %.2f um' % FWHM,xy=(x.shape[0]/4/scale, .6), size=14)
+        plt.annotate('Brightness %.2f' % Max,xy=(x.shape[0]/4/scale, .5), size=14)
 
 
 def plotAvg(i):
