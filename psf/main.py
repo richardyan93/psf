@@ -49,11 +49,12 @@ def getCenters(im, options):
     return beads, maxima, centers, smoothed
 
 def getPSF(bead, options):
-    latProfile, axProfile = getSlices(bead)
-    latFit = fit(latProfile,options['pxPerUmLat'])
-    axFit = fit(axProfile,options['pxPerUmAx'])
-    data = DataFrame([latFit[3], axFit[3]],index = ['FWHMlat', 'FWHMax']).T
-    return data, latFit, axFit
+    X_Profile,Y_Profile,Z_Profile = getSlices(bead)
+    X_Fit = fit(X_Profile,options['pxPerUmLat'])
+    Y_Fit = fit(Y_Profile,options['pxPerUmLat'])
+    Z_Fit = fit(Z_Profile,options['pxPerUmAx'])
+    data = DataFrame([X_Fit[3], Y_Fit[3], Z_Fit[3]],index = ['FWHM_X','FWHM_Y', 'FWHMax']).T
+    return data, X_Fit, Y_Fit, Z_Fit
 
 def getSlices(average):
     # Original code uses mean through axes
@@ -65,9 +66,10 @@ def getSlices(average):
     mid_z = windowshape[0]//2
     mid_x = windowshape[1]//2
     mid_y = windowshape[2]//2
-    latProfile = (average[mid_z-1,mid_x-1,:]+average[mid_z,mid_x-1,:]+average[mid_z-1,mid_x,:]+average[mid_z,mid_x,:])/4
-    axProfile  = (average[:,mid_x-1,mid_y-1]+average[:,mid_x,mid_y-1]+average[:,mid_x-1,mid_y]+average[:,mid_x,mid_y])/4
-    return latProfile, axProfile
+    Y_Profile = (average[mid_z-1,mid_x-1,:]+average[mid_z,mid_x-1,:]+average[mid_z-1,mid_x,:]+average[mid_z,mid_x,:])/4.
+    X_Profile = (average[mid_z-1,:,mid_y-1]+average[mid_z,:,mid_y-1]+average[mid_z-1,:,mid_y]+average[mid_z,:,mid_y])/4.
+    Z_Profile = (average[:,mid_x-1,mid_y-1]+average[:,mid_x,mid_y-1]+average[:,mid_x-1,mid_y]+average[:,mid_x,mid_y])/4.
+    return X_Profile,Y_Profile,Z_Profile
 
 def fit(yRaw,scale):
     y = yRaw - (yRaw[0]+yRaw[-1])/2
